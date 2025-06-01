@@ -1,0 +1,26 @@
+{
+  "name": "PDF Text Modifier Extension",
+  "version": "0.0.1",
+  "manifest_version": 3,
+  "description": "Modify text content on web pages and handle PDF conversions",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PDF Converter Extension"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["webNavigation", "activeTab", "storage"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["popup.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
