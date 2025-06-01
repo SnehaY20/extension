@@ -41,6 +41,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: "./extension/popup.html", // Use your existing popup.html as a template
       filename: "popup.html", // Output filename in the build directory
+      chunks: ["popup"], // Add this line to include only the popup chunk
     }),
     new CopyWebpackPlugin({
       patterns: [

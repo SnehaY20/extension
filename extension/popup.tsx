@@ -11,6 +11,46 @@ interface MessagePayload {
   data?: any;
 }
 
+// Updated toast notification function
+const showToast = (message: string, type: "success" | "error" = "success") => {
+  // Ensure this runs in a browser/DOM environment
+  if (typeof document === "undefined") {
+    console.log(`Toast (${type}): ${message}`); // Fallback for non-DOM environments
+    return;
+  }
+
+  const toastElement = document.createElement("div");
+  toastElement.style.position = "fixed";
+  toastElement.style.bottom = "20px";
+  toastElement.style.left = "50%";
+  toastElement.style.transform = "translateX(-50%)";
+  toastElement.style.padding = "10px 20px";
+  toastElement.style.borderRadius = "5px";
+  toastElement.style.color = "white";
+  toastElement.style.zIndex = "10000"; // Ensure it's on top
+  toastElement.style.fontSize = "14px";
+  toastElement.style.boxShadow = "0 2px 10px rgba(0,0,0,0.2)";
+  toastElement.style.fontFamily =
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  toastElement.style.textAlign = "center";
+
+  if (type === "success") {
+    toastElement.style.backgroundColor = "#4CAF50"; // Green
+  } else {
+    toastElement.style.backgroundColor = "#f44336"; // Red
+  }
+  toastElement.textContent = message;
+
+  document.body.appendChild(toastElement);
+
+  // Remove the toast after a few seconds
+  setTimeout(() => {
+    if (toastElement.parentNode === document.body) {
+      document.body.removeChild(toastElement);
+    }
+  }, 3000); // Display for 3 seconds
+};
+
 export function Popup() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [convertedImages, setConvertedImages] = useState<ConvertedImage[]>([]);
@@ -18,6 +58,48 @@ export function Popup() {
   const [outputFormat, setOutputFormat] = useState("png");
   const [quality, setQuality] = useState(1.5);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Add a direct event listener for debugging
+  useEffect(() => {
+    console.log("Popup: Setting up direct file input listener effect.");
+    const currentInput = fileInputRef.current;
+    if (currentInput) {
+      console.log("Popup: File input ref is available.");
+      const directChangeHandler = (event: Event) => {
+        console.log("Direct file input change event fired.", event);
+        // Try to access files here and log immediately
+        try {
+          const files = (event.target as HTMLInputElement).files;
+          console.log("Direct handler: Accessing files.", files);
+          if (files && files.length > 0) {
+            console.log(
+              "Direct handler: File selected via direct listener.",
+              files[0].name
+            );
+          } else {
+            console.log("Direct handler: No file selected or cancelled.");
+          }
+        } catch (error) {
+          console.error(
+            "Direct handler: Error accessing files from event.",
+            error
+          );
+        }
+      };
+
+      currentInput.addEventListener("change", directChangeHandler);
+
+      // Cleanup the direct listener
+      return () => {
+        console.log("Popup: Cleaning up direct file input listener.");
+        currentInput.removeEventListener("change", directChangeHandler);
+      };
+    } else {
+      console.log(
+        "Popup: File input ref not available yet for direct listener."
+      );
+    }
+  }, []); // Empty dependency array means this runs once on mount
 
   // Listen for messages from background script
   useEffect(() => {
@@ -38,13 +120,14 @@ export function Popup() {
           "Popup: Converted images state updated.",
           request.data.length
         );
+        showToast("Conversion successful!", "success");
       } else if (request.type === "PDF_CONVERSION_ERROR") {
         setIsConverting(false);
         console.error(
           "Popup: Conversion error message received:",
           request.data
         );
-        alert("Error converting PDF: " + request.data?.message);
+        showToast("Error converting PDF: " + request.data?.message, "error");
       }
     };
 
@@ -75,9 +158,11 @@ export function Popup() {
   }, []); // Empty dependency array ensures this runs only once on mount/unmount
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("handleFileSelect: File input change detected.");
+    console.log("handleFileSelect: --- START ---");
+    console.log("handleFileSelect: File input change detected.", event);
     event.preventDefault(); // Added to prevent any potential default behavior
     try {
+      console.log("handleFileSelect: Accessing event.target.", event.target);
       console.log("handleFileSelect: Accessing event.target.files.");
       const files = event.target.files;
       if (!files || files.length === 0) {
@@ -116,7 +201,7 @@ export function Popup() {
         setSelectedFile(null); // Clear selected file if invalid
         setConvertedImages([]); // Clear previous results
         setIsConverting(false); // Reset converting state
-        alert("Please select a valid PDF file.");
+        showToast("Please select a valid PDF file.", "error");
       }
 
       // Always reset file input value to allow selecting the same file again
@@ -130,7 +215,10 @@ export function Popup() {
         "handleFileSelect: Error caught during file selection.",
         error
       );
-      alert("An error occurred while selecting the file: " + error.message);
+      showToast(
+        "An error occurred while selecting the file: " + error.message,
+        "error"
+      );
       // Attempt to reset state and input on error
       setSelectedFile(null);
       setConvertedImages([]);
@@ -141,8 +229,9 @@ export function Popup() {
         );
         fileInputRef.current.value = "";
       }
-      console.log("handleFileSelect: Error handling finished.");
+      console.log("handleFileSelect: --- ERROR HANDLED ---");
     }
+    console.log("handleFileSelect: --- END ---");
   };
 
   const convertPDFToImages = async () => {
@@ -173,6 +262,13 @@ export function Popup() {
         arrayBuffer.byteLength
       );
 
+      // Convert ArrayBuffer to a standard Array for sending
+      const fileDataArray = Array.from(new Uint8Array(arrayBuffer));
+      console.log(
+        "convertPDFToImages: Converted ArrayBuffer to Array, size:",
+        fileDataArray.length
+      );
+
       // Send file data and options to the background script
       if (
         typeof chrome !== "undefined" &&
@@ -186,7 +282,7 @@ export function Popup() {
           {
             type: "CONVERT_PDF",
             data: {
-              fileArrayBuffer: arrayBuffer,
+              fileArrayBuffer: fileDataArray,
               outputFormat,
               quality,
             },
@@ -202,9 +298,19 @@ export function Popup() {
                 "convertPDFToImages: Error sending message via chrome.runtime.sendMessage:",
                 chrome.runtime.lastError
               );
-              alert("Error communicating with background script.");
+              const errorMsg =
+                "Error communicating with background script: " +
+                (chrome.runtime.lastError.message ||
+                  "Unknown error. Ensure the background script is active and correctly configured.");
+              showToast(errorMsg, "error");
               setIsConverting(false);
+              return; // Exit early
             }
+            // Process successful acknowledgement if needed
+            console.log(
+              "convertPDFToImages: Message sending acknowledged.",
+              response
+            );
           }
         );
         // The actual conversion result comes via the onMessage listener
@@ -215,7 +321,10 @@ export function Popup() {
         console.error(
           "convertPDFToImages: Chrome runtime message sending not available."
         );
-        alert("Extension context not found. Cannot start conversion.");
+        showToast(
+          "Extension context not found. Cannot start conversion.",
+          "error"
+        );
         setIsConverting(false);
       }
     } catch (error: any) {
@@ -223,7 +332,7 @@ export function Popup() {
         "convertPDFToImages: Error preparing or sending PDF for background conversion:",
         error
       );
-      alert("Error preparing PDF: " + error.message);
+      showToast("Error preparing PDF: " + error.message, "error");
       setIsConverting(false);
     }
   };
@@ -244,7 +353,10 @@ export function Popup() {
         image.filename,
         error
       );
-      alert("An error occurred while trying to download " + image.filename);
+      showToast(
+        "An error occurred while trying to download " + image.filename,
+        "error"
+      );
     }
   };
 
