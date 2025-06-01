@@ -1,89 +1,111 @@
-// pages/index.js
-import { useState, useRef } from "react";
-import * as pdfjsLib from "pdfjs-dist";
+import React, { useState, useRef, useEffect } from "react";
+import { toast } from "react-toastify";
 
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+interface ConvertedImage {
+  pageNumber: number;
+  dataUrl: string;
+  filename: string;
+}
 
-export default function PDFConverter() {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [convertedImages, setConvertedImages] = useState([]);
+interface MessagePayload {
+  type: string;
+  data?: any;
+}
+
+export function PDFConverter() {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [convertedImages, setConvertedImages] = useState<ConvertedImage[]>([]);
   const [isConverting, setIsConverting] = useState(false);
   const [outputFormat, setOutputFormat] = useState("png");
   const [quality, setQuality] = useState(1.5);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
+  // Listen for messages from the background script
+  useEffect(() => {
+    const handleMessages = (
+      request: MessagePayload,
+      sender: chrome.runtime.MessageSender,
+      sendResponse: (response?: any) => void
+    ) => {
+      console.log("Received message:", request.type, request.data);
+
+      if (request.type === "PDF_CONVERSION_COMPLETE") {
+        console.log("Conversion complete, received images:", request.data);
+        setConvertedImages(request.data);
+        setIsConverting(false);
+        toast.success("PDF converted successfully!");
+      } else if (request.type === "PDF_CONVERSION_ERROR") {
+        console.error("Conversion error:", request.data);
+        setIsConverting(false);
+        toast.error("Error converting PDF. " + request.data?.message || "");
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handleMessages);
+    return () => {
+      chrome.runtime.onMessage.removeListener(handleMessages);
+    };
+  }, []);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const file = event.target.files?.[0];
     if (file && file.type === "application/pdf") {
       setSelectedFile(file);
       setConvertedImages([]);
+      console.log("File selected:", file.name);
     } else {
-      alert("Please select a valid PDF file");
+      toast.error("Please select a valid PDF file");
     }
   };
 
-  const convertPDFToImages = async () => {
+  const convertPDFToImages = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!selectedFile) return;
 
     setIsConverting(true);
     setConvertedImages([]);
+    console.log(
+      "Starting conversion with format:",
+      outputFormat,
+      "and quality:",
+      quality
+    );
 
     try {
       const arrayBuffer = await selectedFile.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-      const images = [];
+      console.log(
+        "File converted to array buffer, size:",
+        arrayBuffer.byteLength
+      );
 
-      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale: quality });
-
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        await page.render({
-          canvasContext: context,
-          viewport: viewport,
-        }).promise;
-
-        let imageDataUrl;
-        if (outputFormat === "png") {
-          imageDataUrl = canvas.toDataURL("image/png");
-        } else if (outputFormat === "jpeg" || outputFormat === "jpg") {
-          imageDataUrl = canvas.toDataURL("image/jpeg", 0.9);
-        } else if (outputFormat === "svg") {
-          // For SVG, we'll create a simple SVG with the canvas image embedded
-          const svgData = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="${
-              canvas.width
-            }" height="${canvas.height}">
-              <image href="${canvas.toDataURL("image/png")}" width="${
-            canvas.width
-          }" height="${canvas.height}"/>
-            </svg>
-          `;
-          imageDataUrl = "data:image/svg+xml;base64," + btoa(svgData);
+      // Send file data and options to the background script
+      chrome.runtime.sendMessage(
+        {
+          type: "CONVERT_PDF",
+          data: {
+            fileArrayBuffer: arrayBuffer,
+            outputFormat: outputFormat,
+            quality: quality,
+          },
+        },
+        (response) => {
+          console.log("Received response from background:", response);
+          if (chrome.runtime.lastError) {
+            console.error("Error sending message:", chrome.runtime.lastError);
+            toast.error("Error communicating with background script");
+            setIsConverting(false);
+          }
         }
-
-        images.push({
-          pageNumber: pageNum,
-          dataUrl: imageDataUrl,
-          filename: `page-${pageNum}.${outputFormat}`,
-        });
-      }
-
-      setConvertedImages(images);
-    } catch (error) {
+      );
+    } catch (error: any) {
       console.error("Error converting PDF:", error);
-      alert("Error converting PDF. Please try again.");
-    } finally {
+      toast.error("Error converting PDF. " + error.message || "");
       setIsConverting(false);
     }
   };
 
-  const downloadImage = (image) => {
+  const downloadImage = (image: ConvertedImage) => {
     const link = document.createElement("a");
     link.href = image.dataUrl;
     link.download = image.filename;
@@ -164,7 +186,7 @@ export default function PDFConverter() {
           </div>
 
           {/* Conversion Options */}
-          {selectedFile && (
+          {selectedFile && !isConverting && (
             <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -200,45 +222,43 @@ export default function PDFConverter() {
           )}
 
           {/* Convert Button */}
-          {selectedFile && (
+          {selectedFile && !isConverting && (
             <div className="mb-8 text-center">
               <button
                 onClick={convertPDFToImages}
-                disabled={isConverting}
-                className={`px-8 py-3 rounded-lg text-white font-medium transition-colors ${
-                  isConverting
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
-                }`}
+                className="px-8 py-3 rounded-lg text-white font-medium transition-colors bg-green-600 hover:bg-green-700"
               >
-                {isConverting ? (
-                  <span className="flex items-center justify-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Converting...
-                  </span>
-                ) : (
-                  "Convert to Images"
-                )}
+                Convert to Images
               </button>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isConverting && (
+            <div className="mb-8 text-center">
+              <div className="inline-flex items-center px-8 py-3 rounded-lg text-white font-medium bg-gray-400">
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Converting...
+              </div>
             </div>
           )}
 

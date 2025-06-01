@@ -1,26 +1,27 @@
 {
-  "name": "PDF Text Modifier Extension",
-  "version": "0.0.1",
   "manifest_version": 3,
-  "description": "Modify text content on web pages and handle PDF conversions",
+  "name": "PDF to Image Converter",
+  "version": "1.0.0",
+  "description": "Convert PDF files to high-quality images (PNG, JPEG)",
+  "permissions": ["storage", "activeTab"],
+  "background": {
+    "service_worker": "background.bundle.js",
+    "type": "module"
+  },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "PDF Converter Extension"
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "permissions": ["webNavigation", "activeTab", "storage"],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
     }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["popup.html"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }
