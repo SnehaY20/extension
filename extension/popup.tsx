@@ -76,6 +76,7 @@ export function Popup() {
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log("handleFileSelect: File input change detected.");
+    event.preventDefault(); // Added to prevent any potential default behavior
     try {
       console.log("handleFileSelect: Accessing event.target.files.");
       const files = event.target.files;
