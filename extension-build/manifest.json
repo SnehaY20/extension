@@ -1,15 +1,20 @@
 {
   "manifest_version": 3,
   "name": "PDF to Image Converter",
-  "version": "1.0.0",
-  "description": "Convert PDF files to high-quality images (PNG, JPEG, SVG)",
-  "permissions": ["storage"],
-  "background": {
-    "service_worker": "background.bundle.js"
-  },
+  "version": "1.0",
+  "description": "Convert PDF files to images with a modern interface",
+  "permissions": ["storage", "tabs", "activeTab", "downloads", "offscreen"],
+  "host_permissions": ["<all_urls>"],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_title": "PDF to Image Converter"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["lib/*", "pdf.worker.min.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   }

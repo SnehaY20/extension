@@ -4,32 +4,31 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
   entry: {
-    popup: "./src/popup.tsx",
-    background: "./extension/background.ts", // Added background script entry
-  }, // Updated entry point to include background script
+    popup: "./extension/popup.js", // Updated entry point to the new vanilla JS file
+  },
   output: {
     filename: "[name].bundle.js", // Use [name] to differentiate bundles
     path: path.resolve(__dirname, "extension-build"), // Output directory
     clean: true, // Clean the output directory before building
   },
   resolve: {
-    extensions: [".tsx", ".ts", ".js", ".jsx"], // Resolve these extensions
+    extensions: [".js", ".jsx"], // Resolve these extensions - removed .tsx, .ts
   },
   module: {
     rules: [
       {
-        test: /\.(ts|tsx|js|jsx)$/,
+        test: /\.(js|jsx)$/, // Updated test to only include js/jsx
         exclude: /node_modules/,
         use: {
           loader: "babel-loader", // Use Babel for transpiling
           options: {
-            presets: ["@babel/preset-react", "@babel/preset-typescript"],
+            presets: ["@babel/preset-react"], // Removed @babel/preset-typescript
           },
         },
       },
       {
         test: /\.css$/,
-        use: ["style-loader", "css-loader", "postcss-loader"], // Handle CSS
+        use: ["style-loader", "css-loader"], // Simplified CSS handling, removed postcss-loader if not used
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
@@ -46,6 +45,8 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         { from: "extension/manifest.json", to: "." }, // Copy manifest from extension directory
+        { from: "extension/lib", to: "lib" }, // Copy PDF.js library files
+        { from: "extension/popup.css", to: "." }, // Copy popup.css
         // Removed icons folder copy
         // We will include globals.css via the style-loader in the JS bundle
       ],
