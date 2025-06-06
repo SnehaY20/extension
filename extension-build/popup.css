@@ -1,3 +1,15 @@
+:root {
+  --primary: #2196f3;
+  --primary-hover: #1976d2;
+  --error: #f44336;
+  --error-bg: #ffebee;
+  --border: #ccc;
+  --background: #ffffff;
+  --background-hover: #f5f5f5;
+  --text: #333333;
+  --text-light: #666666;
+}
+
 body {
   width: 400px;
   min-height: 500px; /* Ensure popup has a minimum height */
@@ -5,9 +17,10 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, sans-serif;
-  background: #ffffff;
+  background: var(--background);
   display: flex;
   flex-direction: column;
+  color: var(--text);
 }
 .container {
   display: flex;
@@ -17,20 +30,24 @@ body {
   overflow-y: auto; /* Add scroll if content exceeds height */
 }
 .upload-area {
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--border);
   border-radius: 8px;
   padding: 40px 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #fafafa;
+  background: var(--background-hover);
 }
 .upload-area:hover {
-  border-color: #2196f3;
-  background: #f5f5f5;
+  border-color: var(--primary);
+  background: var(--background-hover);
+}
+.upload-area:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 .upload-area.dragover {
-  border-color: #2196f3;
+  border-color: var(--primary);
   background: #e3f2fd;
 }
 .content-area {
@@ -47,7 +64,7 @@ body {
   display: none; /* Hidden by default */
   gap: 15px;
   padding: 15px;
-  background: #f8f9fa;
+  background: var(--background-hover);
   border-radius: 8px;
   margin-top: 10px;
   flex-direction: column;
@@ -55,6 +72,11 @@ body {
 }
 .preview-container.active {
   display: flex; /* Shown when active */
+}
+.preview-images {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 .preview-image {
   max-width: 100%;
@@ -64,15 +86,36 @@ body {
   background: white;
   padding: 10px;
 }
-.format-selector {
+.page-selector,
+.format-selector,
+.quality-selector {
   display: flex;
   gap: 10px;
   margin: 10px 0;
   flex-wrap: wrap;
 }
+.page-selector label,
+.quality-selector label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-light);
+}
+.page-selector select,
+.quality-selector select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: white;
+}
+.page-selector select:focus,
+.quality-selector select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
 .format-option {
   padding: 8px 16px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -82,15 +125,19 @@ body {
   min-width: 80px;
 }
 .format-option:hover {
-  background: #f5f5f5;
+  background: var(--background-hover);
+}
+.format-option:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 .format-option.active {
-  background: #2196f3;
+  background: var(--primary);
   color: white;
-  border-color: #2196f3;
+  border-color: var(--primary);
 }
 .download-btn {
-  background: #2196f3;
+  background: var(--primary);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -102,10 +149,14 @@ body {
   margin-top: 10px;
 }
 .download-btn:hover {
-  background: #1976d2;
+  background: var(--primary-hover);
+}
+.download-btn:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 .download-btn:disabled {
-  background: #ccc;
+  background: var(--border);
   cursor: not-allowed;
 }
 .loading {
@@ -113,40 +164,29 @@ body {
   text-align: center;
   margin: 20px 0;
   padding: 20px;
-  background: #f8f9fa;
+  background: var(--background-hover);
   border-radius: 8px;
 }
 .loading.active {
   display: block; /* Shown when active */
 }
 .error {
-  color: #f44336;
+  color: var(--error);
   display: none; /* Hidden by default */
   margin: 10px 0;
   padding: 10px;
-  background: #ffebee;
+  background: var(--error-bg);
   border-radius: 4px;
   text-align: center;
 }
 .error.active {
   display: block; /* Shown when active */
 }
-.quality-selector {
-  margin: 10px 0;
+.footer {
+  text-align: center;
   padding: 10px;
-  background: white;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-.quality-selector label {
-  display: block;
-  margin-bottom: 5px;
-  color: #666;
-}
-.quality-selector select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: white;
+  color: var(--text-light);
+  font-size: 0.9em;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
 }
