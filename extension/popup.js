@@ -232,3 +232,304 @@ function showError(message) {
   loading.classList.remove("active");
   previewContainer.classList.remove("active");
 }
+
+// Prevent popup from closing unexpectedly
+document.addEventListener("DOMContentLoaded", function () {
+  initializeExtension();
+});
+
+// Global variables
+let selectedFiles = [];
+let uploadHistory = [];
+
+function initializeExtension() {
+  // Load upload history
+  loadUploadHistory();
+
+  // Initialize event listeners
+  setupEventListeners();
+
+  // Prevent form submission and page navigation
+  preventDefaultBehaviors();
+}
+
+function setupEventListeners() {
+  const fileInput = document.getElementById("fileInput");
+  const uploadBtn = document.getElementById("uploadBtn");
+
+  // File selection handler
+  fileInput.addEventListener("change", handleFileSelection);
+
+  // Upload button handler
+  uploadBtn.addEventListener("click", handleFileUpload);
+
+  // Prevent the popup from closing on file input click
+  fileInput.addEventListener("click", function (e) {
+    e.stopPropagation();
+  });
+}
+
+function preventDefaultBehaviors() {
+  // Prevent form submissions
+  document.addEventListener("submit", function (e) {
+    e.preventDefault();
+    return false;
+  });
+
+  // Prevent page navigation
+  document.addEventListener("click", function (e) {
+    if (e.target.tagName === "A") {
+      e.preventDefault();
+    }
+  });
+
+  // Prevent drag and drop default behavior
+  document.addEventListener("dragover", function (e) {
+    e.preventDefault();
+  });
+
+  document.addEventListener("drop", function (e) {
+    e.preventDefault();
+    handleFileDrop(e);
+  });
+}
+
+function handleFileSelection(event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  const files = Array.from(event.target.files);
+
+  if (files.length === 0) {
+    return;
+  }
+
+  // Add new files to selected files array
+  files.forEach((file) => {
+    // Check if file already exists
+    if (
+      !selectedFiles.find((f) => f.name === file.name && f.size === file.size)
+    ) {
+      selectedFiles.push(file);
+    }
+  });
+
+  updateSelectedFilesDisplay();
+  updateUploadButton();
+}
+
+function handleFileDrop(event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  const files = Array.from(event.dataTransfer.files);
+
+  files.forEach((file) => {
+    if (
+      !selectedFiles.find((f) => f.name === file.name && f.size === file.size)
+    ) {
+      selectedFiles.push(file);
+    }
+  });
+
+  updateSelectedFilesDisplay();
+  updateUploadButton();
+}
+
+function updateSelectedFilesDisplay() {
+  const container = document.getElementById("selectedFiles");
+
+  if (selectedFiles.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = selectedFiles
+    .map(
+      (file, index) => `
+        <div class="file-item">
+            <div class="file-info">
+                <div class="file-name">${file.name}</div>
+                <div class="file-size">${formatFileSize(file.size)}</div>
+            </div>
+            <button class="remove-file" onclick="removeFile(${index})">×</button>
+        </div>
+    `
+    )
+    .join("");
+}
+
+function removeFile(index) {
+  selectedFiles.splice(index, 1);
+  updateSelectedFilesDisplay();
+  updateUploadButton();
+}
+
+function updateUploadButton() {
+  const uploadBtn = document.getElementById("uploadBtn");
+  uploadBtn.disabled = selectedFiles.length === 0;
+}
+
+async function handleFileUpload() {
+  if (selectedFiles.length === 0) {
+    showStatus("Please select files to upload", "error");
+    return;
+  }
+
+  const uploadBtn = document.getElementById("uploadBtn");
+  const progressSection = document.getElementById("progressSection");
+  const progressFill = document.getElementById("progressFill");
+  const progressText = document.getElementById("progressText");
+
+  // Update UI
+  uploadBtn.disabled = true;
+  uploadBtn.classList.add("uploading");
+  uploadBtn.textContent = "Uploading...";
+  progressSection.style.display = "block";
+
+  try {
+    // Simulate file upload process
+    await simulateFileUpload((progress) => {
+      progressFill.style.width = `${progress}%`;
+      progressText.textContent = `${progress}%`;
+    });
+
+    // Add to history
+    selectedFiles.forEach((file) => {
+      uploadHistory.unshift({
+        name: file.name,
+        size: file.size,
+        timestamp: new Date().toISOString(),
+      });
+    });
+
+    // Keep only last 10 uploads
+    uploadHistory = uploadHistory.slice(0, 10);
+
+    // Save to storage
+    await saveUploadHistory();
+
+    // Update UI
+    showStatus(
+      `Successfully uploaded ${selectedFiles.length} file(s)`,
+      "success"
+    );
+    updateHistoryDisplay();
+
+    // Reset
+    selectedFiles = [];
+    document.getElementById("fileInput").value = "";
+    updateSelectedFilesDisplay();
+  } catch (error) {
+    showStatus("Upload failed: " + error.message, "error");
+  } finally {
+    // Reset upload button
+    uploadBtn.disabled = false;
+    uploadBtn.classList.remove("uploading");
+    uploadBtn.textContent = "Upload Files";
+
+    // Hide progress after delay
+    setTimeout(() => {
+      progressSection.style.display = "none";
+      progressFill.style.width = "0%";
+      progressText.textContent = "0%";
+    }, 2000);
+
+    updateUploadButton();
+  }
+}
+
+function simulateFileUpload(onProgress) {
+  return new Promise((resolve, reject) => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 15;
+      if (progress >= 100) {
+        progress = 100;
+        onProgress(progress);
+        clearInterval(interval);
+        resolve();
+      } else {
+        onProgress(Math.floor(progress));
+      }
+    }, 200);
+
+    // Simulate potential failure
+    if (Math.random() < 0.05) {
+      // 5% chance of failure
+      setTimeout(() => {
+        clearInterval(interval);
+        reject(new Error("Network error"));
+      }, 1000);
+    }
+  });
+}
+
+function showStatus(message, type) {
+  const statusMessage = document.getElementById("statusMessage");
+  statusMessage.textContent = message;
+  statusMessage.className = `status-message ${type}`;
+
+  // Clear status after 5 seconds
+  setTimeout(() => {
+    statusMessage.textContent = "";
+    statusMessage.className = "status-message";
+  }, 5000);
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return "0 Bytes";
+
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+async function loadUploadHistory() {
+  try {
+    const result = await chrome.storage.local.get(["uploadHistory"]);
+    uploadHistory = result.uploadHistory || [];
+    updateHistoryDisplay();
+  } catch (error) {
+    console.error("Failed to load upload history:", error);
+  }
+}
+
+async function saveUploadHistory() {
+  try {
+    await chrome.storage.local.set({ uploadHistory });
+  } catch (error) {
+    console.error("Failed to save upload history:", error);
+  }
+}
+
+function updateHistoryDisplay() {
+  const historyList = document.getElementById("historyList");
+
+  if (uploadHistory.length === 0) {
+    historyList.innerHTML = '<div class="no-history">No uploads yet</div>';
+    return;
+  }
+
+  historyList.innerHTML = uploadHistory
+    .map((item) => {
+      const date = new Date(item.timestamp);
+      const timeStr = date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      return `
+            <div class="history-item">
+                <span class="history-file">${item.name}</span>
+                <span class="history-time">${timeStr}</span>
+            </div>
+        `;
+    })
+    .join("");
+}
+
+// Make removeFile function global
+window.removeFile = removeFile;

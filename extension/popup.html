@@ -1,63 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PDF to Image Converter</title>
-    <link rel="stylesheet" href="popup.css" />
+    <title>File Upload Extension</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="container">
-      <div class="upload-area" id="dropZone">
-        <p>Drag and drop a PDF file here or click to select</p>
-        <input type="file" id="fileInput" accept=".pdf" style="display: none" />
+      <div class="header">
+        <h2>File Upload</h2>
       </div>
 
-      <div class="content-area">
-        <div class="loading" id="loading">
-          <p>Converting PDF...</p>
+      <div class="upload-section">
+        <div class="file-input-wrapper">
+          <input
+            type="file"
+            id="fileInput"
+            class="file-input"
+            multiple
+            accept="*/*"
+          />
+          <label for="fileInput" class="file-label">
+            <div class="upload-icon">📁</div>
+            <span>Choose Files</span>
+          </label>
         </div>
 
-        <div class="error" id="error"></div>
+        <div class="selected-files" id="selectedFiles"></div>
 
-        <div class="preview-container" id="previewContainer">
-          <div class="page-selector">
-            <label for="pageRange">Page Range:</label>
-            <select id="pageRange">
-              <option value="1">Page 1</option>
-              <option value="all">All Pages</option>
-            </select>
-          </div>
-
-          <div class="format-selector">
-            <div class="format-option active" data-format="png">PNG</div>
-            <div class="format-option" data-format="jpg">JPG</div>
-            <div class="format-option" data-format="webp">WebP</div>
-          </div>
-
-          <div class="quality-selector">
-            <label for="quality">Image Quality:</label>
-            <select id="quality">
-              <option value="1">High (100%)</option>
-              <option value="0.8">Good (80%)</option>
-              <option value="0.6">Medium (60%)</option>
-              <option value="0.4">Low (40%)</option>
-            </select>
-          </div>
-
-          <div id="previewImages" class="preview-images"></div>
-          <button class="download-btn" id="downloadBtn">
-            Download Image(s)
-          </button>
-        </div>
+        <button id="uploadBtn" class="upload-btn" disabled>Upload Files</button>
       </div>
 
-      <footer class="footer">
-        <p>PDF to Image Converter v1.0</p>
-      </footer>
+      <div class="progress-section" id="progressSection" style="display: none">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">0%</div>
+      </div>
+
+      <div class="status-section" id="statusSection">
+        <div class="status-message" id="statusMessage"></div>
+      </div>
+
+      <div class="history-section">
+        <h3>Recent Uploads</h3>
+        <div class="history-list" id="historyList">
+          <div class="no-history">No uploads yet</div>
+        </div>
+      </div>
     </div>
 
-    <script src="lib/pdf.min.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>
