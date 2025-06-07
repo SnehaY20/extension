@@ -1,31 +1,27 @@
 {
   "manifest_version": 3,
-  "name": "File Upload Extension",
-  "version": "1.0.0",
-  "description": "Chrome extension for file uploads with stable popup",
-  "permissions": ["storage", "activeTab"],
-  "host_permissions": ["https://*/*", "http://*/*"],
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "File Upload Extension"
+  "name": "PDF to Image Converter",
+  "version": "1.0",
+  "description": "Convert PDF files to PNG, JPEG, or JPG images.",
+  "icons": {
+    "16": "icons/icon16.png"
   },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png"
+    }
+  },
+  "permissions": ["sidePanel"],
+  "host_permissions": [],
   "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
-    }
-  ],
-  "icons": {
-    "16": "icons/icon16.svg",
-    "48": "icons/icon48.svg",
-    "128": "icons/icon128.svg"
+  "side_panel": {
+    "default_path": "sidepanel.html"
   },
   "web_accessible_resources": [
     {
-      "resources": ["popup.html", "popup.js", "styles.css"],
+      "resources": ["lib/pdf.worker.min.js"],
       "matches": ["<all_urls>"]
     }
   ]

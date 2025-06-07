@@ -1,0 +1,15 @@
+{
+  "name": "pdf-to-image-converter",
+  "version": "1.0.0",
+  "description": "Chrome extension to convert PDFs to images",
+  "scripts": {
+    "build:extension": "node copy-extension-assets.js"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^5.3.31"
+  },
+  "devDependencies": {
+    "fs-extra": "^11.2.0",
+    "sharp": "^0.34.2"
+  }
+}

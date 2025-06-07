@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PDF to Image</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <h2>PDF to Image Converter</h2>
+    <input type="file" id="fileInput" accept="application/pdf" />
+    <select id="formatSelect">
+      <option value="png">PNG</option>
+      <option value="jpeg">JPEG</option>
+      <option value="jpg">JPG</option>
+    </select>
+    <button id="convertBtn">Convert</button>
+    <div id="previewContainer"></div>
+
+    <!-- Include pdf.js via <script> -->
+    <script src="lib/pdf.min.js"></script>
+    <script type="module" src="sidepanel.js"></script>
+  </body>
+</html>
