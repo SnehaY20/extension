@@ -1,28 +1,28 @@
-# File Upload Chrome Extension
+# PDF to Image Converter Chrome Extension
 
-A stable, vanilla JavaScript Chrome extension for file uploads that prevents popup closing issues commonly found with React/Next.js based extensions.
+A Chrome extension that allows you to convert PDF files to PNG, JPEG, or JPG images directly in your browser.
 
 ## 🚀 Features
 
-- **Stable Popup**: No unexpected closing when uploading files
-- **Drag & Drop Support**: Drop files directly on web pages
-- **Upload History**: Track your recent uploads
-- **Progress Tracking**: Visual progress indicators
-- **Multiple File Support**: Upload multiple files at once
-- **Modern UI**: Beautiful, responsive design with animations
-- **Local Storage**: Secure local storage of upload history
+- **PDF to Image Conversion**: Convert PDF files to PNG, JPEG, or JPG formats
+- **Side Panel Interface**: Easy-to-use side panel for file conversion
+- **Multiple Format Support**: Choose between PNG, JPEG, or JPG output
+- **Modern UI**: Clean and intuitive interface
+- **Local Processing**: Files are processed locally in your browser
 
 ## 📁 Project Structure
 
 ```
 extension/
 ├── manifest.json          # Extension configuration
-├── popup.html            # Extension popup interface
-├── popup.js             # Popup logic and file handling
-├── styles.css           # Styling for the popup
-├── background.js        # Service worker for background tasks
-├── content.js          # Content script for web page interaction
-└── README.md           # This file
+├── sidepanel.html        # Side panel interface
+├── sidepanel.js          # Side panel logic
+├── sidepanel.css         # Side panel styling
+├── background.js         # Service worker for background tasks
+├── lib/                  # PDF processing library
+├── utils/               # Utility functions
+├── icons/               # Extension icons
+└── README.md            # This file
 ```
 
 ## 🛠️ Installation
@@ -72,104 +72,34 @@ extension/
 
 ## 🎯 Usage
 
-### Using the Popup Interface
+### Using the Side Panel
 
 1. **Open the Extension**
 
    - Click the extension icon in Chrome toolbar
-   - The popup window will open
+   - The side panel will open on the right side of your browser
 
-2. **Select Files**
+2. **Select PDF File**
 
-   - Click "Choose Files" button
-   - Or drag and drop files onto the upload area
-   - Selected files will appear in the list
+   - Click "Choose PDF" button
+   - Select a PDF file from your computer
+   - The file will be loaded into the converter
 
-3. **Upload Files**
+3. **Choose Output Format**
 
-   - Click "Upload Files" button
-   - Watch the progress bar
-   - Files will be processed and added to history
+   - Select your desired output format (PNG, JPEG, or JPG)
+   - Adjust any conversion settings if needed
 
-4. **View History**
-   - Recent uploads appear in the "Recent Uploads" section
-   - History is preserved between sessions
+4. **Convert and Download**
 
-### Using Drag & Drop on Web Pages
-
-1. **Drag Files to Any Web Page**
-
-   - Drag files from your computer onto any web page
-   - A drop zone overlay will appear
-   - Release the files to upload
-
-2. **In-Page Uploader**
-   - The extension can inject a floating uploader on web pages
-   - This feature can be activated through the content script
-
-## 🔧 Key Features that Prevent Popup Closing
-
-### 1. Event Prevention
-
-```javascript
-// Prevents form submissions that cause navigation
-document.addEventListener("submit", function (e) {
-  e.preventDefault();
-  return false;
-});
-```
-
-### 2. File Input Handling
-
-```javascript
-// Prevents propagation that might close popup
-fileInput.addEventListener("click", function (e) {
-  e.stopPropagation();
-});
-```
-
-### 3. Stable State Management
-
-- Uses vanilla JavaScript variables instead of React state
-- No routing or navigation that could cause popup to close
-- Proper event handling without framework interference
-
-### 4. Memory-Based Storage
-
-- No localStorage dependencies that might cause issues
-- Uses Chrome extension storage API
-- Maintains state without page refreshes
-
-## 🐛 Troubleshooting
-
-### Extension Not Loading
-
-- Ensure all files are in the same directory
-- Check that `manifest.json` is valid JSON
-- Verify Chrome version supports Manifest V3
-
-### Popup Closes Immediately
-
-- This extension specifically fixes this issue
-- If still occurring, check for JavaScript errors in DevTools
-- Ensure no other extensions are interfering
-
-### Files Not Uploading
-
-- Check browser console for errors
-- Verify file permissions
-- Ensure files are not corrupted
-
-### Upload History Not Saving
-
-- Check if Chrome storage permissions are granted
-- Clear extension data and try again
-- Verify storage quota isn't exceeded
+   - Click "Convert" button
+   - Wait for the conversion to complete
+   - Download the converted image file
 
 ## 🔒 Permissions Explained
 
-- **storage**: Save upload history locally
-- **activeTab**: Interact with current web page for drag & drop
+- **sidePanel**: Enables the side panel interface
+- **web_accessible_resources**: Allows access to PDF processing library
 
 ## 🚀 Development
 
@@ -178,9 +108,8 @@ fileInput.addEventListener("click", function (e) {
 1. **Edit Files**
 
    - Modify any of the source files
-   - Changes to `popup.html`, `popup.js`, `styles.css` affect the popup
+   - Changes to `sidepanel.html`, `sidepanel.js`, `sidepanel.css` affect the interface
    - Changes to `background.js` affect background processing
-   - Changes to `content.js` affect web page interactions
 
 2. **Reload Extension**
 
@@ -190,24 +119,28 @@ fileInput.addEventListener("click", function (e) {
    - Or disable and re-enable the extension
 
 3. **Debug**
-   - Right-click extension icon → "Inspect popup" for popup debugging
-   - Use Chrome DevTools for content script debugging
+   - Right-click extension icon → "Inspect popup" for side panel debugging
+   - Use Chrome DevTools for debugging
    - Check `chrome://extensions/` for error messages
 
-### Adding Features
+## 📝 Common Issues
 
-- **New Upload Destinations**: Modify `background.js` to handle different upload services
-- **File Type Filtering**: Add validation in `popup.js`
-- **UI Enhancements**: Update `styles.css` and `popup.html`
-- **Additional Content Features**: Extend `content.js`
+1. **PDF Not Loading**
 
-## 📝 Common Issues Fixed
+   - Ensure the PDF file is not corrupted
+   - Check file permissions
+   - Verify the file size is within limits
 
-1. **Popup Closing on File Selection** ✅ Fixed
-2. **React/Next.js Routing Conflicts** ✅ Avoided by using vanilla JS
-3. **localStorage Issues** ✅ Uses Chrome storage API
-4. **Event Handling Problems** ✅ Proper event prevention
-5. **State Management Issues** ✅ Simple variable-based state
+2. **Conversion Fails**
+
+   - Check browser console for errors
+   - Ensure sufficient memory is available
+   - Try with a smaller PDF file
+
+3. **Side Panel Not Opening**
+   - Verify extension is properly installed
+   - Check for JavaScript errors in DevTools
+   - Try reloading the extension
 
 ## 🤝 Contributing
 
@@ -223,4 +156,4 @@ This project is open source and available under the MIT License.
 
 ---
 
-**Note**: This extension is built with vanilla JavaScript to avoid the common popup closing issues that occur with React/Next.js based Chrome extensions. The stable architecture ensures reliable file upload functionality.
+**Note**: This extension processes PDF files locally in your browser, ensuring your files remain private and secure.
