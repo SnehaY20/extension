@@ -32,7 +32,7 @@ extension/
 1. **Download/Clone the repository**
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/SnehaY20/extension.git
    cd extension
    ```
 
@@ -100,4 +100,3 @@ extension/
 
 - **sidePanel**: Enables the side panel interface
 - **web_accessible_resources**: Allows access to PDF processing library
-
