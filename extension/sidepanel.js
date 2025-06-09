@@ -18,12 +18,20 @@ fileInput.addEventListener("change", (event) => {
 
 convertBtn.addEventListener("click", async () => {
   if (!selectedFile) {
-    alert("Please upload a PDF file.");
+    showError("Please select a PDF file to convert.");
+    return;
+  }
+
+  // Check file type
+  if (selectedFile.type !== "application/pdf") {
+    showError(
+      "Invalid file type. Please upload a PDF."
+    );
     return;
   }
 
   const format = formatSelect.value;
-  previewContainer.innerHTML = "Converting...";
+  showLoading("Converting PDF...");
   downloadBtn.classList.add("hidden");
   downloadBtn.classList.remove("flex");
 
@@ -42,16 +50,31 @@ convertBtn.addEventListener("click", async () => {
     downloadBtn.classList.remove("hidden");
     downloadBtn.classList.add("flex");
   } catch (err) {
-    previewContainer.innerHTML = "Error converting PDF.";
-    console.error(err);
-    downloadBtn.classList.add("hidden");
-    downloadBtn.classList.remove("flex");
+    let errorMessage = "Error converting PDF: ";
+
+    if (err.message.includes("5MB limit")) {
+      errorMessage =
+        "The PDF file is too large. Please select a file smaller than 5MB.";
+    } else if (err.message.includes("empty")) {
+      errorMessage = "The PDF file is empty. Please select a valid PDF file.";
+    } else if (err.message.includes("Couldn't find any images")) {
+      errorMessage =
+        "No visible content found in the PDF. Please ensure the PDF contains images or text.";
+    } else if (err.message.includes("JSZip")) {
+      errorMessage =
+        "Error loading required libraries. Please try refreshing the extension.";
+    } else {
+      errorMessage += err.message;
+    }
+
+    showError(errorMessage);
+    console.error("Conversion error:", err);
   }
 });
 
 downloadBtn.addEventListener("click", async () => {
   if (!convertedImages.length) {
-    console.log("No converted images to download.");
+    showError("No converted images to download.");
     return;
   }
 
@@ -73,7 +96,9 @@ downloadBtn.addEventListener("click", async () => {
 
   // Multiple images: download as zip
   if (typeof JSZip === "undefined") {
-    alert("JSZip failed to load. Cannot generate ZIP file.");
+    showError(
+      "Error: Required library not loaded. Please try refreshing the extension."
+    );
     return;
   }
 
@@ -91,6 +116,8 @@ downloadBtn.addEventListener("click", async () => {
       zip.file(`page-${index}.${format}`, blob);
     } catch (error) {
       console.error(`Error processing page ${index}:`, error);
+      showError(`Error processing page ${index}. Please try again.`);
+      return;
     }
   }
 
@@ -106,5 +133,14 @@ downloadBtn.addEventListener("click", async () => {
     console.log("ZIP download initiated.");
   } catch (error) {
     console.error("ZIP generation failed:", error);
+    showError("Error creating ZIP file. Please try again.");
   }
 });
+
+function showError(message) {
+  previewContainer.innerHTML = `<div style="color: red;">${message}</div>`;
+}
+
+function showLoading(message) {
+  previewContainer.innerHTML = `<div class="text-gray-600 p-4">${message}</div>`;
+}
