@@ -12,6 +12,7 @@ let convertedImages = [];
 fileInput.addEventListener("change", (event) => {
   selectedFile = event.target.files[0];
   downloadBtn.classList.add("hidden");
+  downloadBtn.classList.remove("flex");
   previewContainer.innerHTML = "";
 });
 
@@ -24,6 +25,7 @@ convertBtn.addEventListener("click", async () => {
   const format = formatSelect.value;
   previewContainer.innerHTML = "Converting...";
   downloadBtn.classList.add("hidden");
+  downloadBtn.classList.remove("flex");
 
   try {
     convertedImages = await convertPdfToImages(selectedFile, format);
@@ -38,10 +40,12 @@ convertBtn.addEventListener("click", async () => {
     });
 
     downloadBtn.classList.remove("hidden");
+    downloadBtn.classList.add("flex");
   } catch (err) {
     previewContainer.innerHTML = "Error converting PDF.";
     console.error(err);
     downloadBtn.classList.add("hidden");
+    downloadBtn.classList.remove("flex");
   }
 });
 
