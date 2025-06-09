@@ -21,7 +21,11 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["lib/pdf.worker.min.js"],
+      "resources": [
+        "lib/pdf.worker.min.js",
+        "lib/pdf.min.js",
+        "lib/jszip.min.js"
+      ],
       "matches": ["<all_urls>"]
     }
   ]

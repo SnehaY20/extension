@@ -1,15 +1,26 @@
 {
-  "name": "pdf-to-image-converter",
+  "name": "pdf-converter",
   "version": "1.0.0",
-  "description": "Chrome extension to convert PDFs to images",
+  "description": "PDF to Image Converter Chrome Extension",
   "scripts": {
-    "build:extension": "node copy-extension-assets.js"
+    "build:extension": "node copy-extension-assets.js",
+    "build:css": "tailwindcss -i ./extension/input.css -o ./extension/output.css",
+    "watch:css": "tailwindcss -i ./extension/input.css -o ./extension/output.css --watch",
+    "lint:css": "stylelint 'extension/**/*.css'"
   },
   "dependencies": {
     "pdfjs-dist": "^5.3.31"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "autoprefixer": "^10.4.16",
     "fs-extra": "^11.2.0",
-    "sharp": "^0.34.2"
+    "postcss": "^8.4.32",
+    "sharp": "^0.34.2",
+    "stylelint": "^16.6.1",
+    "stylelint-config-standard": "^36.0.1",
+    "stylelint-config-standard-scss": "^15.0.1",
+    "stylelint-scss": "^6.12.0",
+    "tailwindcss": "^3.4.0"
   }
 }

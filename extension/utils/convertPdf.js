@@ -1,21 +1,54 @@
-// No import needed - using global pdfjsLib
-pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL(
-  "lib/pdf.worker.min.js"
-);
+// import * as pdfjsLib from "../lib/pdf";
+// import pdfjsWorker from "../lib/pdf.worker.min.js";
 
-export async function convertPdfToImage(file, format = "png") {
-  const pdfData = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-  const page = await pdf.getPage(1);
+// pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-  const viewport = page.getViewport({ scale: 2.0 });
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
+// export async function convertPdfToImages(file, format = "png") {
+//   const typedArray = new Uint8Array(await file.arrayBuffer());
+//   const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
 
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
+//   const images = [];
 
-  await page.render({ canvasContext: context, viewport }).promise;
+//   for (let i = 1; i <= pdf.numPages; i++) {
+//     const page = await pdf.getPage(i);
+//     const viewport = page.getViewport({ scale: 2 });
+//     const canvas = document.createElement("canvas");
+//     const context = canvas.getContext("2d");
 
-  return canvas.toDataURL(`image/${format}`);
+//     canvas.width = viewport.width;
+//     canvas.height = viewport.height;
+
+//     await page.render({ canvasContext: context, viewport }).promise;
+//     const dataUrl = canvas.toDataURL(`image/${format}`);
+//     images.push({ dataUrl, index: i });
+//   }
+
+//   return images;
+// }
+
+export async function convertPdfToImages(file, format = "png") {
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL(
+    "lib/pdf.worker.min.js"
+  );
+  const typedArray = new Uint8Array(await file.arrayBuffer());
+
+  const pdf = await window.pdfjsLib.getDocument({ data: typedArray }).promise;
+
+  const images = [];
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 2 });
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    await page.render({ canvasContext: context, viewport }).promise;
+    const dataUrl = canvas.toDataURL(`image/${format}`);
+    images.push({ dataUrl, index: i });
+  }
+
+  return images;
 }

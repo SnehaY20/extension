@@ -7,12 +7,11 @@ chrome.runtime.onInstalled.addListener(() => {
   
   chrome.action.onClicked.addListener((tab) => {
     chrome.sidePanel.setOptions({
-      tabId: tab.id, // 👈 important!
+      tabId: tab.id, 
       path: "sidepanel.html",
       enabled: true,
     });
   
-    // 👇 fix: provide tabId explicitly
     chrome.sidePanel.open({ tabId: tab.id });
   });
   
